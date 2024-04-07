@@ -1,0 +1,32 @@
+import requests
+import discord
+import asyncio
+
+
+TOKEN = ""
+API_URL = 'https://api.battlemetrics.com/servers/26737505'
+
+intents = discord.Intents.default()
+intents.presences = True
+intents.messages = True
+client = discord.Client(intents=intents)
+
+async def get_players_count():
+    response = requests.get(API_URL)
+    data = response.json()
+    players_count = data['data']['attributes']['players']
+    return players_count
+
+
+async def update_status():
+    while True:
+        players_count = await get_players_count()
+        status = f"Количество игроков: {players_count} / 98"
+        await client.change_presence(activity=discord.CustomActivity(name=status))
+        await asyncio.sleep(60)
+@client.event
+async def on_ready():
+    print(f'We have logged in as {client.user}')
+    await client.loop.create_task(update_status())
+
+client.run(TOKEN)
